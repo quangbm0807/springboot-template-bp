@@ -2,9 +2,8 @@ package com.quang.template.service;
 
 import com.quang.template.dto.request.user.CreateUserRequest;
 import com.quang.template.dto.request.user.UpdateUserRequest;
-import com.quang.template.dto.response.UserResponse;
+import com.quang.template.dto.response.user.UserResponse;
 import com.quang.template.exception.ResourceNotFoundException;
-import com.quang.template.model.Enum.Role;
 import com.quang.template.model.User;
 import com.quang.template.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,11 +32,6 @@ public class UserService {
         return mapToUserResponse(user);
     }
 
-    public UserResponse getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
-        return mapToUserResponse(user);
-    }
 
     public UserResponse createUser(CreateUserRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {

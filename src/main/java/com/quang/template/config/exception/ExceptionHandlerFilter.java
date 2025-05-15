@@ -27,7 +27,7 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (Exception e) {
             ResponseAPI apiResponse = ResponseAPI.builder()
-                    .message("An error occurred during request processing: " + e.getMessage())
+                    .message("Internal server error")
                     .data(null)
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build();
