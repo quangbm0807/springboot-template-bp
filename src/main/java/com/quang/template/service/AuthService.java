@@ -15,6 +15,8 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -34,17 +36,16 @@ public class AuthService {
                 .lastName(request.getLastName())
                 .role(Role.USER)
                 .build();
-
-        log.info("Before saving user: accountNonLocked = {}", user.isAccountNonLocked());
+        Optional<User> findUser = userRepository.findByUsername(user.getUsername())
+                .or(() -> userRepository.findByEmail(user.getEmail()));
+        if (findUser.isPresent()) {
+            throw new IllegalArgumentException("User with username or email already exists");
+        }
         userRepository.save(user);
-
         User savedUser = userRepository.findByUsername(user.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found after saving"));
-        log.info("After saving user: accountNonLocked = {}", savedUser.isAccountNonLocked());
-
         var jwtToken = jwtService.generateToken(savedUser);
         var refreshToken = jwtService.generateRefreshToken(savedUser);
-
         return AuthResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
