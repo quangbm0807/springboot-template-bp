@@ -3,6 +3,7 @@ package com.quang.template.service;
 
 import com.quang.template.config.jwt.JwtService;
 import com.quang.template.dto.request.AuthRequest;
+import com.quang.template.dto.request.RefreshTokenRequest;
 import com.quang.template.dto.request.RegisterRequest;
 import com.quang.template.dto.response.AuthResponse;
 import com.quang.template.model.Enum.Role;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.*;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -91,5 +93,30 @@ public class AuthService {
             log.error("Error during authentication: {}", e.getMessage(), e);
             throw e;
         }
+    }
+
+
+    public AuthResponse refreshToken(RefreshTokenRequest request) {
+        String refreshToken = request.getRefreshToken();
+        String username = jwtService.extractUsername(refreshToken);
+        if (username == null) {
+            log.error("Invalid refresh token provided");
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        if (!jwtService.isTokenValid(refreshToken, user)) {
+            log.error("Refresh token validation failed for user: {}", username);
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+
+        String newAccessToken = jwtService.generateToken(user);
+        String newRefreshToken = jwtService.generateRefreshToken(user);
+        log.info("Generated new tokens for user: {}", username);
+        return AuthResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .build();
     }
 }
