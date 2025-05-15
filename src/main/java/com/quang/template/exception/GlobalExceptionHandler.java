@@ -3,6 +3,7 @@ package com.quang.template.exception;
 import com.quang.template.dto.response.ResponseAPI;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -104,7 +105,16 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
     }
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ResponseAPI> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
+        ResponseAPI apiResponse = ResponseAPI.builder()
+                .message(ex.getMessage())
+                .data(null)
+                .status(HttpStatus.FORBIDDEN.value())
+                .build();
 
+        return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ResponseAPI> handleGlobalException(Exception ex, WebRequest request) {
         ResponseAPI apiResponse = ResponseAPI.builder()
